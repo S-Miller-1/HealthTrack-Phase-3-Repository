@@ -1,0 +1,11 @@
+{
+  "context": "Local SQLite synthetic retrieval microbenchmark",
+  "vital_rows": 5000,
+  "activity_rows": 500,
+  "queries": 200,
+  "page_size": 50,
+  "median_ms": 0.624,
+  "p95_ms": 1.06,
+  "maximum_ms": 5.685,
+  "caveat": "Not HTTP throughput, concurrency, or production database load."
+}
