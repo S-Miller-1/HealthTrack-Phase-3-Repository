@@ -1,22 +1,27 @@
 # Alert Performance and Reliability Report
-**Shawn Miller | MSCS-699-B01 | University of the Cumberlands**
+**Shawn Miller | MSCS-699-B01 | University of the Cumberlands | November 15, 2026**
 
-## Measurement plan
-The performance benchmark in `scripts/benchmark_alerts.py` runs with fictional readings against a temporary SQLite database. It measures the elapsed time for alert evaluation and database commit for 500 synthetic vital readings, reports median, 95th percentile and maximum durations, and counts generated alerts and notifications. Repeated runs should be compared only on the same machine.
+## Testing approach
+I tested HealthTrack's alert evaluation using `python -m scripts.benchmark_alerts` on a Windows computer running Python 3.12. The script creates fictional patient data in a temporary, in-memory SQLite database. It records the total time to insert a vital-sign reading, evaluate its alert rules, and commit the transaction. This is a local single-process benchmark, not an HTTP load test.
 
-## Results
-The benchmark script has been added, but has **not been executed and validated in the integrated GitHub repository**. Therefore, no verified latency, throughput or success-rate measurements are claimed in this report. Run the script and attach its JSON output before final submission:
+## Measured results
+The benchmark ran successfully on November 15, 2026. The output was:
 
-```powershell
-python -m scripts.benchmark_alerts
-```
+| Measure | Result |
+|---|---:|
+| Synthetic vital-sign readings | 500 |
+| Alerts generated | 100 |
+| In-app notification records | 100 |
+| Median processing time | 0.510 ms |
+| 95th percentile processing time | 1.691 ms |
+| Maximum processing time | 6.249 ms |
 
-The earlier Phase 3 database retrieval measurements are not alert-system measurements and should not be presented as such.
+The automated test suite also reached 100% progress without failures in the provided local execution. The only pytest warning was a third-party Starlette TestClient deprecation notice.
 
-## Reliability controls and limitations
-A unique source key prevents duplicate alerts for the same reading or activity date. A relational record tracks alert status, times, acknowledgments, resolutions and escalations. Escalation is idempotent after the first successful check. Authorization limits notification access to the recipient; alert checks occur within the app's database transaction.
+## What the results mean
+For this small educational test, the database stored the expected alerts and in-app notifications, and most inserts and alert evaluations finished quickly. This suggests that the alert rules add little overhead in a simple SQLite setting. It does not mean that alerts reach staff in 0.510 milliseconds: staff must open or poll the in-app notification list.
 
-The implementation uses polling of stored in-app notifications rather than pushed notifications. It has no durable delivery queue, external paging integration, or autonomous periodic escalation worker. A slow or unavailable database can delay both ingestion and alerts; the code does not claim continuous uptime. Performance results from local SQLite do not prove production concurrency or real-time clinical safety.
+## Reliability and limitations
+Each alert uses a unique source key to prevent duplicates. Status changes, acknowledgments, resolutions and escalation events are stored for review. High-priority alerts are not suppressed by low-priority alerts. Escalation occurs when an administrator invokes the escalation-check endpoint: the project does not have an always-running scheduler or external delivery channel.
 
-## Verification steps
-Execute the full test suite and benchmark; note environment, Python version and machine, sample count, median, p95, maximum and errors. Investigate any missed or duplicated alerts. This educational project should not be used for healthcare decisions or production monitoring.
+Performance may differ with larger databases, concurrent requests, network delay, or downtime. This prototype is not clinically validated or intended for real patient use. The measurements are limited to the synthetic single-process workload; no uptime or delivery-time guarantees are claimed.
