@@ -13,7 +13,7 @@ depends_on = None
 
 def upgrade():
     # Uses shared SQLAlchemy metadata, retaining named CHECK/FK/unique constraints.
-    Base.metadata.create_all(bind=op.get_bind())
+    Base.metadata.create_all(bind=op.get_bind(), tables=[Base.metadata.tables[name] for name in ('users', 'patients', 'patient_assignments', 'vital_signs', 'activity_data', 'audit_events')])
 
 def downgrade():
-    Base.metadata.drop_all(bind=op.get_bind())
+    Base.metadata.drop_all(bind=op.get_bind(), tables=[Base.metadata.tables[name] for name in ('users', 'patients', 'patient_assignments', 'vital_signs', 'activity_data', 'audit_events')])

@@ -9,11 +9,14 @@ from .database import get_db
 from .models import User, Patient, PatientAssignment, VitalSigns, ActivityData, AuditEvent
 from . import crud, schemas
 from .security import current_user, require_admin, require_patient_access, verify_password, make_token
+from .alerts import router as alert_router, evaluate_vital, evaluate_activity
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s %(name)s %(message)s')
 logger = logging.getLogger('healthtrack.api')
 app = FastAPI(title='HealthTrack Phase 3 API', version='0.3.0',
               description='Educational hypertension monitoring prototype. Not for real patient data or clinical decision-making.')
+
+app.include_router(alert_router)
 
 @app.middleware('http')
 async def request_id(request: Request, call_next):
@@ -128,6 +131,8 @@ def create_vital(patient_id: int, data: schemas.VitalCreate, db: Session = Depen
     if data.source == 'device':
         raise HTTPException(422, 'Device integration requires a validated device registry (future phase)')
     result = crud.create(db, VitalSigns, {'patient_id': patient_id, **data.model_dump()})
+    evaluate_vital(db, result)
+    db.commit()
     audit(db, user, 'create', 'vital_signs')
     return result
 
@@ -178,6 +183,8 @@ def create_activity(patient_id: int, data: schemas.ActivityCreate, db: Session =
     patient = chart_patient(patient_id, db, user)
     ensure_monitoring(patient)
     result = crud.create(db, ActivityData, {'patient_id': patient_id, **data.model_dump()})
+    evaluate_activity(db, result)
+    db.commit()
     audit(db, user, 'create', 'activity_data')
     return result
 
