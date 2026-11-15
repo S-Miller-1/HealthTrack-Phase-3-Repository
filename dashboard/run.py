@@ -31,6 +31,7 @@ async def monitor_socket(ws: WebSocket, db: Session = Depends(get_db)):
         last_payload = None
         while True:
             try:
+                user = current_user(token=token, db=db)  # recheck token expiry and account status
                 data = snapshot(db, user, patient_id)
                 if not data["enrolled"] or not data["consent"]:
                     await ws.close(code=1008)
