@@ -73,3 +73,12 @@ The previous design rationale describes a **17-table, 43-operation, 29-path** fu
 ## Security and operational limits
 
 JWTs use a local demo issuer rather than a trusted external OpenID Connect identity provider. Passwords use salted PBKDF2. HTTPS termination, secret management, per-request rate limiting, MFA, managed encryption, backup recovery, complete denied-request auditing, tamper-resistant audit storage, versioned reading corrections and HIPAA risk assessment are **not implemented**. The hard-delete endpoints are a rubric exercise and conflict with the retention and immutable-revision requirements in the clinical proposal. **Before deploying to a clinical environment, replace this prototype architecture and complete a professional security and privacy review.**
+
+
+## Real-time Dashboard Development (Shawn Miller)
+
+The Dashboard Development assignment is integrated with Phase 3 using the same SQLAlchemy records, patient assignments, consent checks and JWT accounts. It shows stored **blood pressure, pulse, steps and active minutes** in responsive Dash/Plotly charts and displays color-coded demonstration alerts. Browser WebSockets push changed snapshots after a two-second database check, with a ten-second Dash polling backup.
+
+After completing the setup above, run **`python -m uvicorn dashboard.run:app --reload`** instead of `app.main:app`. Open **http://127.0.0.1:8000/dashboard/** for the monitoring page; `/docs` remains the API guide. Log in with an existing demo patient, nurse or clinician account and add fictional readings through the Swagger endpoints to watch updates. No real patient data or medical devices are supported.
+
+Dashboard deliverables: [`docs/dashboard_ui_design.md`](docs/dashboard_ui_design.md), [`docs/dashboard_user_guide.md`](docs/dashboard_user_guide.md), [`docs/dashboard_testing.md`](docs/dashboard_testing.md), implementation in `dashboard/`, and tests in `tests/test_dashboard_monitor.py`. Run `python -m pytest tests/test_dashboard_monitor.py -v` to check the monitor logic. Browser performance/latency evidence must be measured locally, not assumed.
