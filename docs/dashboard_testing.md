@@ -22,6 +22,29 @@ The dashboard is checked at three levels: unit tests for classification and data
 ## Automated checks
 Run `python -m pytest tests/test_dashboard_monitor.py -v`, then `python -m pytest -v`. The new tests cover normal/warning/critical thresholds, ordering of readings, activity history, and assignment-based chart access. The pre-existing Phase 3 tests also need to remain passing.
 
+## Verified local test results (November 15, 2026)
+
+Shawn ran the project on **Windows with Python 3.12.10** using a local SQLite database populated with fictional sample readings.
+
+| Test or observation | Actual result | Status |
+| --- | --- | --- |
+| Automated test suite | `python -m pytest -v`: **44 passed, 3 warnings in 42.77 seconds** | PASS |
+| Dash initial display | Patient selector, five summary cards and three Plotly graphs rendered using sample records | PASS |
+| API data insertion | Authenticated `POST /patients/1/vitals` with sample 185/122 mmHg and pulse 95 returned **201 Created** | PASS |
+| Live browser connection | Dashboard reported **Live WebSocket connected** after installing WebSocket support for Uvicorn | PASS |
+| Warning presentation | Sample reading 151/94 mmHg, pulse 91 displayed with amber warning banner | PASS |
+| Critical presentation | Most recent sample reading **185/122 mmHg, pulse 95** displayed with a red critical banner | PASS |
+| Trend data update | New sample reading appeared on pressure and pulse trend charts | PASS |
+| Data ordering | Earlier local-offset sample reading appeared on charts but was not selected as latest; using a current UTC timestamp displayed the expected current sample reading | OBSERVED; timestamp normalization warrants a follow-up review |
+| Automatic browser rendering | Live dashboard rendered updated sample reading and red alert in browser | PASS, exact push latency not measured |
+| Initial page-load performance | Not measured with browser performance tools | NOT YET MEASURED |
+| Concurrent-user load | Not measured | NOT YET MEASURED |
+| Blocked-WebSocket fallback | Periodic updates observed while WebSocket dependency was initially missing; controlled fallback test not separately timed | PARTIALLY OBSERVED |
+
+The three automated-test warnings concerned package deprecations in Dash, Starlette's testing integration, and Starlette WSGI middleware; they did not fail the suite. The early local WebSocket connection failed because the installed Uvicorn lacked a WebSocket transport. This was corrected by installing `uvicorn[standard]`, and the repository dependency was updated accordingly.
+
+These results come from the supplied local console output and browser screenshots. No performance measurement or production clinical validation is being claimed. Thresholds and patient information are fictional for coursework.
+
 ## Results and limitations
 **Automated and browser outcomes must be captured from the execution environment.** No full browser load time or live WebSocket latency measurement is claimed here without a recorded test run. For a complete submission, attach a browser screenshot of the cards and plots, a screenshot of a red or amber demonstration alert, a terminal screenshot of passing tests, and a screenshot of the WebSocket frames or Network panel. Record measured milliseconds rather than estimates.
 
